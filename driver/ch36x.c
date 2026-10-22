@@ -1331,6 +1331,19 @@ static int ch36x_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent
 	if (retval)
 		goto free_regions;
 
+	/* CH367: если хосту выдан MSI/MSI-X — включим MSI и на чипе
+	 * (INTCR.MSI_ENABLE, bit0). Иначе чип остаётся в legacy INTx-режиме,
+	 * а хост ждёт прерывание по MSI-вектору — MI платы (fasync/SIGIO)
+	 * не доставляется. На хостах без MSI (INTx) ничего не меняем. */
+	if (ch36x_dev->chiptype != CHIP_CH365 &&
+	    (pdev->msi_enabled || pdev->msix_enabled)) {
+		u8 icr = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367IntCtr));
+		outb(icr | CH367_INTCR_MSI_ENABLE_BIT,
+		     ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367IntCtr));
+		dev_info(&pdev->dev, "MSI enabled on chip (INTCR bit0), irq=%d",
+			 ch36x_dev->irq);
+	}
+
 	pci_set_drvdata(pdev, ch36x_dev);
 	sprintf(ch36x_dev->dev_file_name, "%s%c", CH36X_DRV_NAME, '0' + g_dev_count);
 	retval = request_irq(ch36x_dev->irq, ch36x_isr, IRQF_SHARED, ch36x_dev->dev_file_name, (void *)ch36x_dev);
