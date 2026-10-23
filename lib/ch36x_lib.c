@@ -5,6 +5,9 @@
  * Web:      http://wch.cn
  * Author:   WCH <tech@wch.cn>
  *
+ * Copyright (C) 2026 INFOTECS AT
+ * Author:   Iluha Companets
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -17,6 +20,7 @@
  * V1.1 - modify APIs related to interrupt
  * V1.2 - add APIs related to SPI transfer
  * V1.3 - fix bugs of memory block read/write
+ * V1.4 - add feature - MSI using (fork https://github.com/iluha2/ch36x_linux)
  */
 
 #include <errno.h>
