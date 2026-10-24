@@ -48,6 +48,7 @@
 #include <linux/types.h>
 #include <linux/uaccess.h>
 #include <linux/wait.h>
+#include <linux/delay.h>
 #include <asm/io.h>
 #include <asm/signal.h>
 
@@ -625,6 +626,8 @@ error:
 
 static bool ch36x_flash_wait(struct ch36x_dev *ch36x_dev)
 {
+	int TIMEOUT_MS = 200;
+	int POLL_US = 100;
 	u8 status;
 	u32 i = 0;
 	u8 regGPOR;
@@ -636,8 +639,11 @@ static bool ch36x_flash_wait(struct ch36x_dev *ch36x_dev)
 		ch36x_start_spi_data_in(ch36x_dev, regGPOR);
 		status = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 		ch36x_stop_spi(ch36x_dev, regGPOR);
-		if ((status & 0x01) && (++i > 100000))
-			return false;
+		if (status & 0x01) {
+			if (++i > TIMEOUT_MS*1000/POLL_US)
+				return false;
+			usleep_range(POLL_US, POLL_US*2);
+		}
 	} while (status & 0x01);
 
 	return true;
