@@ -7,7 +7,7 @@ if [ $EUID -ne 0 ]; then
 fi
 
 kver=$(uname -r | cut -d "-" -f2)
-apt-get update
+#apt-get update
 apt-get -y install dkms kernel-build-tools kernel-headers-$kver kernel-headers-modules-$kver
 
 pushd $(dirname "$(realpath "$0")")
