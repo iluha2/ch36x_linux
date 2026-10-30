@@ -21,5 +21,6 @@ cp -p ./dkms.conf $src_dir/
 cp -p ./Makefile  $src_dir/
 
 dkms install --modprobe-on-install -m $PACKAGE_NAME -v $PACKAGE_VERSION
+sleep 1
 
 popd
