@@ -241,7 +241,7 @@ typedef struct _CH368_MEM_REG {	  // CH367 Memory space
 #define CH36x_FLASH_WRITE  _IOW(IOCTL_MAGIC, 0x9f, u16)
 
 /* global varibles */
-static unsigned char g_dev_count = 0;
+static u8 g_dev_count = 0;
 static struct class *ch36x_class = NULL;
 static struct list_head g_private_head;
 static int ch36x_major = 0x00;
@@ -264,34 +264,32 @@ struct ch36x_dev {
 	u8 spimode;
 };
 
-static int ch36x_cfg_read(int type, unsigned char offset, void *buf, struct pci_dev *pdev)
+static int ch36x_cfg_read(int type, u8 offset, void *buf, struct pci_dev *pdev)
 {
-	int retval = 0;
 	u8 read_byte;
 	u16 read_word;
 	u32 read_dword;
 
 	switch (type) {
+
 	case SIZE_BYTE:
 		pci_read_config_byte(pdev, offset, &read_byte);
-		retval = put_user(read_byte, (u8 __user *)buf);
-		break;
+		return put_user(read_byte, (u8 __user *)buf);
+
 	case SIZE_WORD:
 		pci_read_config_word(pdev, offset, &read_word);
-		retval = put_user(read_word, (u16 __user *)buf);
-		break;
+		return put_user(read_word, (u16 __user *)buf);
+
 	case SIZE_DWORD:
 		pci_read_config_dword(pdev, offset, &read_dword);
-		retval = put_user(read_dword, (u32 __user *)buf);
-		break;
+		return put_user(read_dword, (u32 __user *)buf);
+
 	default:
 		return -EINVAL;
 	}
-
-	return retval;
 }
 
-static int ch36x_cfg_write(int type, unsigned char offset, void *buf, struct pci_dev *pdev)
+static int ch36x_cfg_write(int type, u8 offset, void *buf, struct pci_dev *pdev)
 {
 	int retval = 0;
 	u8 write_byte;
@@ -299,35 +297,32 @@ static int ch36x_cfg_write(int type, unsigned char offset, void *buf, struct pci
 	u32 write_dword;
 
 	switch (type) {
+
 	case SIZE_BYTE:
 		retval = get_user(write_byte, (u8 __user *)buf);
-		if (retval)
-			goto out;
-		pci_write_config_byte(pdev, offset, write_byte);
-		break;
+		if (!retval)
+			pci_write_config_byte(pdev, offset, write_byte);
+		return retval;
+
 	case SIZE_WORD:
 		retval = get_user(write_word, (u16 __user *)buf);
-		if (retval)
-			goto out;
-		pci_write_config_word(pdev, offset, write_word);
-		break;
+		if (!retval)
+			pci_write_config_word(pdev, offset, write_word);
+		return retval;
+
 	case SIZE_DWORD:
 		retval = get_user(write_dword, (u32 __user *)buf);
-		if (retval)
-			goto out;
-		pci_write_config_dword(pdev, offset, write_dword);
-		break;
+		if (!retval)
+			pci_write_config_dword(pdev, offset, write_dword);
+		return retval;
+
 	default:
 		return -EINVAL;
 	}
-
-out:
-	return retval;
 }
 
 static int ch36x_io_read(int type, u8 offset, void *buf, struct ch36x_dev *ch36x_dev)
 {
-	int retval = 0;
 	u32 ioval;
 	u8 regval;
 
@@ -344,23 +339,22 @@ static int ch36x_io_read(int type, u8 offset, void *buf, struct ch36x_dev *ch36x
 	}
 
 	switch (type) {
+
 	case SIZE_BYTE:
 		ioval = inb(ch36x_dev->ioaddr + offset);
-		retval = put_user(ioval, (u8 __user *)buf);
-		break;
+		return put_user(ioval, (u8 __user *)buf);
+
 	case SIZE_WORD:
 		ioval = inl(ch36x_dev->ioaddr + offset);
-		retval = put_user(ioval, (u16 __user *)buf);
-		break;
+		return put_user(ioval, (u16 __user *)buf);
+
 	case SIZE_DWORD:
 		ioval = inl(ch36x_dev->ioaddr + offset);
-		retval = put_user(ioval, (u32 __user *)buf);
-		break;
+		return put_user(ioval, (u32 __user *)buf);
+
 	default:
 		return -EINVAL;
 	}
-
-	return retval;
 }
 
 static int ch36x_io_write(int type, u8 offset, void *buf, struct ch36x_dev *ch36x_dev)
@@ -384,34 +378,32 @@ static int ch36x_io_write(int type, u8 offset, void *buf, struct ch36x_dev *ch36
 	}
 
 	switch (type) {
+
 	case SIZE_BYTE:
 		retval = get_user(write_byte, (u8 __user *)buf);
-		if (retval)
-			goto out;
-		outb(write_byte, ch36x_dev->ioaddr + offset);
-		break;
+		if (!retval)
+			outb(write_byte, ch36x_dev->ioaddr + offset);
+		return retval;
+
 	case SIZE_WORD:
 		retval = get_user(write_word, (u16 __user *)buf);
-		if (retval)
-			goto out;
-		outl(write_word | 0xffff0000, ch36x_dev->ioaddr + offset);
-		break;
+		if (!retval)
+			outl(write_word | 0xffff0000, ch36x_dev->ioaddr + offset);
+		return retval;
+
 	case SIZE_DWORD:
 		retval = get_user(write_dword, (u32 __user *)buf);
-		if (retval)
-			goto out;
-		outl(write_dword, ch36x_dev->ioaddr + offset);
-		break;
+		if (!retval)
+			outl(write_dword, ch36x_dev->ioaddr + offset);
+		return retval;
+
 	default:
 		return -EINVAL;
 	}
-out:
-	return retval;
 }
 
 static int ch36x_mmio_read(int type, u16 offset, void *buf, struct ch36x_dev *ch36x_dev)
 {
-	int retval = 0;
 	u32 ioval;
 	u8 regval;
 
@@ -426,23 +418,22 @@ static int ch36x_mmio_read(int type, u16 offset, void *buf, struct ch36x_dev *ch
 	}
 
 	switch (type) {
+
 	case SIZE_BYTE:
 		ioval = ioread8((u8 __iomem *)(ch36x_dev->memaddr) + offset);
-		retval = put_user(ioval, (u8 __user *)buf);
-		break;
+		return put_user(ioval, (u8 __user *)buf);
+
 	case SIZE_WORD:
 		ioval = ioread32((u8 __iomem *)(ch36x_dev->memaddr) + offset);
-		retval = put_user(ioval, (u16 __user *)buf);
-		break;
+		return put_user(ioval, (u16 __user *)buf);
+
 	case SIZE_DWORD:
 		ioval = ioread32((u8 __iomem *)(ch36x_dev->memaddr) + offset);
-		retval = put_user(ioval, (u32 __user *)buf);
-		break;
+		return put_user(ioval, (u32 __user *)buf);
+
 	default:
 		return -EINVAL;
 	}
-
-	return retval;
 }
 
 static int ch36x_mmio_write(int type, u16 offset, void *buf, struct ch36x_dev *ch36x_dev)
@@ -464,64 +455,56 @@ static int ch36x_mmio_write(int type, u16 offset, void *buf, struct ch36x_dev *c
 	}
 
 	switch (type) {
+
 	case SIZE_BYTE:
 		retval = get_user(write_byte, (u8 __user *)buf);
-		if (retval)
-			goto out;
-		iowrite8(write_byte, (u8 __iomem *)(ch36x_dev->memaddr) + offset);
-		break;
+		if (!retval)
+			iowrite8(write_byte, (u8 __iomem *)(ch36x_dev->memaddr) + offset);
+		return retval;
+
 	case SIZE_WORD:
 		retval = get_user(write_word, (u16 __user *)buf);
-		if (retval)
-			goto out;
-		iowrite32(write_word | 0xffff0000, (u8 __iomem *)(ch36x_dev->memaddr) + offset);
-		break;
+		if (!retval)
+			iowrite32(write_word | 0xffff0000, (u8 __iomem *)(ch36x_dev->memaddr) + offset);
+		return retval;
+
 	case SIZE_DWORD:
 		retval = get_user(write_dword, (u32 __user *)buf);
-		if (retval)
-			goto out;
-		iowrite32(write_dword, (u8 __iomem *)(ch36x_dev->memaddr) + offset);
-		break;
+		if (!retval)
+			iowrite32(write_dword, (u8 __iomem *)(ch36x_dev->memaddr) + offset);
+		return retval;
+
 	default:
 		return -EINVAL;
 	}
-
-out:
-	return retval;
 }
 
 static int ch36x_mem_read_block(u8 type, u16 offset, void *buf, u32 len, struct ch36x_dev *ch36x_dev)
 {
-	int retval = 0;
-	u32 ioval;
-	int times;
-	int i;
-	u8 *tbuf;
-	u32 rindex = 0;
-
 	if ((type == SIZE_DWORD) && (len % 4 != 0))
 		return -EINVAL;
 
-	times = len / 4;
-
-	tbuf = kmalloc(len, GFP_KERNEL);
+	u8 *tbuf = kmalloc(len, GFP_KERNEL);
 	if (!tbuf)
 		return -ENOMEM;
 
+	u32 ioval;
+	u32 rindex = 0;
+	int times = len / 4;
 	if (type == SIZE_DWORD) {
-		for (i = 0; i < times; i++) {
+		for (int i = 0; i < times; i++) {
 			ioval = ioread32((u8 __iomem *)(ch36x_dev->memaddr) + offset + rindex);
 			*(u32 *)(tbuf + rindex) = ioval;
 			rindex += 4;
 		}
 	} else {
-		for (i = 0; i < len; i++) {
+		for (int i = 0; i < len; i++) {
 			*(tbuf + rindex) = ioread8((u8 __iomem *)(ch36x_dev->memaddr) + offset + rindex);
 			rindex += 1;
 		}
 	}
 
-	retval = copy_to_user((char __user *)buf, tbuf, len);
+	int retval = copy_to_user((char __user *)buf, tbuf, len);
 
 	kfree(tbuf);
 	return retval;
@@ -529,34 +512,28 @@ static int ch36x_mem_read_block(u8 type, u16 offset, void *buf, u32 len, struct 
 
 static int ch36x_mem_write_block(u8 type, u16 offset, void *buf, u32 len, struct ch36x_dev *ch36x_dev)
 {
-	int retval = 0;
-	u32 ioval;
-	int times;
-	int i;
-	u8 *tbuf;
-	u32 rindex = 0;
-
 	if ((type == SIZE_DWORD) && (len % 4 != 0))
 		return -EINVAL;
 
-	times = len / 4;
-
-	tbuf = kmalloc(len, GFP_KERNEL);
+	u8 *tbuf = kmalloc(len, GFP_KERNEL);
 	if (!tbuf)
 		return -ENOMEM;
 
-	retval = copy_from_user(tbuf, (char __user *)buf, len);
+	int retval = copy_from_user(tbuf, (char __user *)buf, len);
 	if (retval)
 		goto exit;
 
+	u32 ioval;
+	u32 rindex = 0;
+	int times = len / 4;
 	if (type == SIZE_DWORD) {
-		for (i = 0; i < times; i++) {
+		for (int i = 0; i < times; i++) {
 			ioval = *(u32 *)(tbuf + rindex);
 			iowrite32(ioval, (u8 __iomem *)(ch36x_dev->memaddr) + offset + rindex);
 			rindex += 4;
 		}
 	} else {
-		for (i = 0; i < len; i++) {
+		for (int i = 0; i < len; i++) {
 			iowrite8(*(tbuf + rindex), (u8 __iomem *)(ch36x_dev->memaddr) + offset + rindex);
 			rindex += 1;
 		}
@@ -575,9 +552,7 @@ static void ch36x_start_spi_data_in(struct ch36x_dev *ch36x_dev, u8 regGPOR)
 
 static bool ch36x_start_spi(struct ch36x_dev *ch36x_dev, u8 *regGPOR)
 {
-	u8 regval;
-
-	regval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPICtrl));
+	u8 regval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPICtrl));
 	if (ch36x_dev->spimode & BIT(0)) {
 		if (ch36x_dev->spimode & BIT(1))
 			outb(CH367_SPICR_SPI_NEWTRAN_BIT | CH367_SPICR_SPI_FREQ_BIT | CH367_SPICR_SPI_SLT_SDI_BIT,
@@ -597,65 +572,50 @@ static bool ch36x_start_spi(struct ch36x_dev *ch36x_dev, u8 *regGPOR)
 	if (!(*regGPOR & CH367_GPOR_SET_SCS_BIT))
 		outb(*regGPOR | CH367_GPOR_SET_SCS_BIT, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367GPOR));
 	outb((*regGPOR & 0x39) | CH367_GPOR_SET_SDX_DIR_BIT, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367GPOR));
-	regval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367GPOR));
-	if (regval & CH367_GPOR_SET_SCS_BIT)
-		return false;
 
-	return true;
+	regval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367GPOR));
+	return !(regval & CH367_GPOR_SET_SCS_BIT);
 }
 
 static bool ch36x_stop_spi(struct ch36x_dev *ch36x_dev, u8 regGPOR)
 {
-	u8 regval;
-
-	regval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPICtrl));
+	u8 regval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPICtrl));
 	outb(regval & CH367_SPICR_SPI_FREQ_BIT, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPICtrl));
 	outb((regGPOR & 0x39) | CH367_GPOR_SET_SDX_BIT | CH367_GPOR_SET_SCS_BIT,
 	     ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367GPOR));
-	regval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367GPOR));
-	if (!(regval & CH367_GPOR_SET_SCS_BIT))
-		return false;
 
-	return true;
+	regval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367GPOR));
+	return (regval & CH367_GPOR_SET_SCS_BIT);
 }
 
 static int ch36x_stream_spi(struct ch36x_dev *ch36x_dev, void *ibuf, u32 ilen, void *obuf, u32 olen)
 {
-	int retval = -1;
-	char *buffer;
-	u8 regGPOR;
-	int i;
+	char *buffer = kmalloc(max(ilen, olen), GFP_KERNEL);
+	if (!buffer)
+		return -ENOMEM;
 
-	buffer = kmalloc(max(ilen, olen), GFP_KERNEL);
-	if (!buffer) {
-		retval = -ENOMEM;
-		goto error_mem;
-	}
-	retval = copy_from_user((char *)buffer, (char __user *)ibuf, ilen);
+	int retval = copy_from_user((char *)buffer, (char __user *)ibuf, ilen);
 	if (retval)
 		goto error;
 
+	u8 regGPOR;
 	if (!ch36x_start_spi(ch36x_dev, &regGPOR)) {
 		retval = -EFAULT;
 		goto error;
 	}
-	for (i = 0; i < ilen; i++)
+	for (int i = 0; i < ilen; i++)
 		outb(*(buffer + i), ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 
 	if (olen) {
 		ch36x_start_spi_data_in(ch36x_dev, regGPOR);
-		for (i = 0; i < olen; i++)
+		for (int i = 0; i < olen; i++)
 			*(buffer + i) = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 	}
 	ch36x_stop_spi(ch36x_dev, regGPOR);
 
 	retval = copy_to_user((char __user *)obuf, buffer, olen);
-	if (retval)
-		goto error;
-
 error:
 	kfree(buffer);
-error_mem:
 	return retval;
 }
 
@@ -672,10 +632,8 @@ static bool ch36x_flash_wait(struct ch36x_dev *ch36x_dev)
 		ch36x_start_spi_data_in(ch36x_dev, regGPOR);
 		status = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 		ch36x_stop_spi(ch36x_dev, regGPOR);
-		if (status & 0x01) {
-			if (++i > 100000)
-				return false;
-		}
+		if ((status & 0x01) && (++i > 100000))
+			return false;
 	} while (status & 0x01);
 
 	return true;
@@ -684,82 +642,71 @@ static bool ch36x_flash_wait(struct ch36x_dev *ch36x_dev)
 static bool ch36x_flash_we(struct ch36x_dev *ch36x_dev)
 {
 	u8 regGPOR;
-
 	if (!ch36x_start_spi(ch36x_dev, &regGPOR))
 		return false;
-	outb(0x06, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 
+	outb(0x06, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 	return ch36x_stop_spi(ch36x_dev, regGPOR);
 }
 
 static u8 ch36x_flash_id(struct ch36x_dev *ch36x_dev)
 {
-	u8 flashID;
 	u8 regGPOR;
+	if (!ch36x_start_spi(ch36x_dev, &regGPOR))
+		return 0xFF;
 
-	if (!ch36x_start_spi(ch36x_dev, &regGPOR)) {
-		flashID = 0xff;
-		return flashID;
-	}
 	outb(0x90, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 	outb(0x00, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 	outb(0x00, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 	outb(0x00, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 	ch36x_start_spi_data_in(ch36x_dev, regGPOR);
-	flashID = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
+	u8 flashID = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 	ch36x_stop_spi(ch36x_dev, regGPOR);
-
 	return flashID;
 }
 
 static bool ch36x_flash_lock(struct ch36x_dev *ch36x_dev, u8 wrLock)
 {
-	u8 flashID, regData;
-	u8 regGPOR;
-
-	flashID = ch36x_flash_id(ch36x_dev);
-	if (flashID == 0xff)
+	u8 flashID = ch36x_flash_id(ch36x_dev);
+	if (flashID == 0xFF)
 		return false;
 
+	u8 regData;
 	if (wrLock == 0xFF) {
 		regData = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367GPOR));
 		regData |= 0x08;
 		outb(regData, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367GPOR));
 		return true;
-	} else {
-		if (!(ch36x_flash_we(ch36x_dev)))
-			return false;
-
-		if (flashID == 0xBF) {
-			ch36x_start_spi(ch36x_dev, &regGPOR);
-			outb(0x50, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
-			ch36x_stop_spi(ch36x_dev, regGPOR);
-		}
-		ch36x_start_spi(ch36x_dev, &regGPOR);
-		outb(0x01, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
-		outb(wrLock, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
-		ch36x_stop_spi(ch36x_dev, regGPOR);
-
-		return ch36x_flash_wait(ch36x_dev);
 	}
+
+	if (!(ch36x_flash_we(ch36x_dev)))
+		return false;
+
+	u8 regGPOR;
+	if (flashID == 0xBF) {
+		ch36x_start_spi(ch36x_dev, &regGPOR);
+		outb(0x50, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
+		ch36x_stop_spi(ch36x_dev, regGPOR);
+	}
+	ch36x_start_spi(ch36x_dev, &regGPOR);
+	outb(0x01, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
+	outb(wrLock, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
+	ch36x_stop_spi(ch36x_dev, regGPOR);
+	return ch36x_flash_wait(ch36x_dev);
 }
 
 static bool ch36x_flash_read(struct ch36x_dev *ch36x_dev, u32 startaddr, void *buf, u32 len)
 {
-	u32 i = 0;
-	u8 regGPOR;
-	char *buffer;
-
 	if (len == 0)
 		return false;
 
-	buffer = kmalloc(len, GFP_KERNEL);
+	char *buffer = kmalloc(len, GFP_KERNEL);
 	if (!buffer)
 		return false;
 
-	if (!ch36x_start_spi(ch36x_dev, &regGPOR)) {
+	u8 regGPOR;
+	if (!ch36x_start_spi(ch36x_dev, &regGPOR))
 		goto out;
-	}
 
 	outb(0x03, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 	outb((u8)(startaddr >> 16 & 0xFF), ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
@@ -767,15 +714,13 @@ static bool ch36x_flash_read(struct ch36x_dev *ch36x_dev, u32 startaddr, void *b
 	outb((u8)(startaddr & 0xFF), ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 	ch36x_start_spi_data_in(ch36x_dev, regGPOR);
 
-	for (i = 0; i < len; i++) {
+	for (u32 i = 0; i < len; i++)
 		buffer[i] = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
-	}
-	if (copy_to_user((char __user *)buf, buffer, len)) {
+
+	if (copy_to_user((char __user *)buf, buffer, len))
 		goto out;
-	}
 
 	kfree(buffer);
-
 	return ch36x_stop_spi(ch36x_dev, regGPOR);
 
 out:
@@ -785,16 +730,16 @@ out:
 
 static bool ch36x_flash_erase(struct ch36x_dev *ch36x_dev, u32 startaddr, u32 len)
 {
-	u32 i, flashID;
-	u8 regGPOR;
-
 	if (len == 0)
 		return false;
-	flashID = ch36x_flash_id(ch36x_dev);
-	if (flashID == 0xff)
+
+	u32 flashID = ch36x_flash_id(ch36x_dev);
+	if (flashID == 0xFF)
 		return false;
 
-	if ((flashID != 0XBF) && (startaddr & 0x7FFF) == 0) {
+	u8 regGPOR;
+
+	if ((flashID != 0xBF) && (startaddr & 0x7FFF) == 0) {
 		while (len >= 0x8000) {
 			if (!(ch36x_flash_we(ch36x_dev)))
 				return false;
@@ -809,7 +754,7 @@ static bool ch36x_flash_erase(struct ch36x_dev *ch36x_dev, u32 startaddr, u32 le
 			len -= 0x8000;
 		}
 	}
-	for (i = 0; i < len; i += 4096) {
+	for (u32 i = 0; i < len; i += 4096) {
 		if (!(ch36x_flash_we(ch36x_dev)))
 			return false;
 		ch36x_start_spi(ch36x_dev, &regGPOR);
@@ -826,26 +771,21 @@ static bool ch36x_flash_erase(struct ch36x_dev *ch36x_dev, u32 startaddr, u32 le
 
 static bool ch36x_flash_write(struct ch36x_dev *ch36x_dev, u32 startaddr, void *buf, u32 len)
 {
-	u8 flashID, j;
-	u32 i;
-	u8 regGPOR;
-	u8 *buffer;
-	int retval;
-
 	if (len == 0)
 		return false;
 
-	buffer = kmalloc(len, GFP_KERNEL);
+	u8 *buffer = kmalloc(len, GFP_KERNEL);
 	if (!buffer)
-		return -false;
+		return false;
 
-	retval = copy_from_user(buffer, (char __user *)buf, len);
-	if (retval)
+	if (copy_from_user(buffer, (char __user *)buf, len))
 		goto out;
 
-	flashID = ch36x_flash_id(ch36x_dev);
+	u8 flashID = ch36x_flash_id(ch36x_dev);
 	if (flashID == 0xff)
 		goto out;
+
+	u8 regGPOR;
 
 	if (flashID == 0xBF) {
 		if (!(ch36x_flash_we(ch36x_dev)))
@@ -854,8 +794,8 @@ static bool ch36x_flash_write(struct ch36x_dev *ch36x_dev, u32 startaddr, void *
 		outb(0xAF, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 		outb((u8)(startaddr >> 16 & 0xFF), ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
 		outb((u8)(startaddr >> 8 & 0xFF), ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
-		j = (u8)(startaddr & 0xFF);
-		for (i = 0; i < len; i++) {
+		u8 j = (u8)(startaddr & 0xFF);
+		for (u32 i = 0; i < len; i++) {
 			if (i) {
 				ch36x_start_spi(ch36x_dev, &regGPOR);
 				j = 175;
@@ -867,11 +807,10 @@ static bool ch36x_flash_write(struct ch36x_dev *ch36x_dev, u32 startaddr, void *
 		}
 		ch36x_start_spi(ch36x_dev, &regGPOR);
 		outb(0x04, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367SPIData));
-		retval = ch36x_stop_spi(ch36x_dev, regGPOR);
-		if (retval == false)
+		if (!(ch36x_stop_spi(ch36x_dev, regGPOR)))
 			goto out;
 	} else {
-		for (i = 0; i < len;) {
+		for (u32 i = 0; i < len;) {
 			if (!(ch36x_flash_we(ch36x_dev)))
 				goto out;
 			ch36x_start_spi(ch36x_dev, &regGPOR);
@@ -900,10 +839,10 @@ out:
 
 static irqreturn_t ch36x_isr(int irq, void *dev_id)
 {
-	unsigned char intval;
+	u8 intval;
 	struct ch36x_dev *ch36x_dev = (struct ch36x_dev *)dev_id;
 
-	dev_vdbg(&ch36x_dev->ch36x_pdev->dev, "%s occurs\n", __func__);
+	dev_vdbg(&ch36x_dev->ch36x_pdev->dev, "%s occurs", __func__);
 	if (ch36x_dev->chiptype == CHIP_CH365) {
 		intval = inb(ch36x_dev->ioaddr + offsetof(mCH365_IO_REG, mCh365IoCtrl));
 		if (!(intval & CH365_IOCTRL_INTA_BIT))
@@ -931,11 +870,10 @@ static irqreturn_t ch36x_isr(int irq, void *dev_id)
 	kill_fasync(&ch36x_dev->fasync, SIGIO, POLL_IN);
 
 	/* interrupt status clear */
-	if (ch36x_dev->chiptype == CHIP_CH365) {
+	if (ch36x_dev->chiptype == CHIP_CH365)
 		outb(intval & ~CH365_IOCTRL_INTA_BIT, ch36x_dev->ioaddr + offsetof(mCH365_IO_REG, mCh365IoCtrl));
-	} else {
+	else
 		outb(intval & ~CH367_MICSR_INTA_BIT, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367status));
-	}
 
 	return IRQ_HANDLED;
 }
@@ -943,7 +881,6 @@ static irqreturn_t ch36x_isr(int irq, void *dev_id)
 static void ch36x_enable_interrupts(struct ch36x_dev *ch36x_dev, enum INTMODE mode)
 {
 	u8 ctrlval;
-	u8 intval;
 
 	if (ch36x_dev->chiptype == CHIP_CH365) {
 		pci_read_config_byte(ch36x_dev->ch36x_pdev, CH365_STA_REG, &ctrlval);
@@ -968,7 +905,7 @@ static void ch36x_enable_interrupts(struct ch36x_dev *ch36x_dev, enum INTMODE mo
 		}
 		ctrlval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367IntCtr));
 		outb(ctrlval | CH367_INTCR_INT_ENABLE_BIT, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367IntCtr));
-		intval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367status));
+		u8 intval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367status));
 		outb(intval & ~CH367_MICSR_INTA_BIT, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367status));
 	}
 	ch36x_dev->intmode = mode;
@@ -977,7 +914,6 @@ static void ch36x_enable_interrupts(struct ch36x_dev *ch36x_dev, enum INTMODE mo
 static void ch36x_disable_interrupts(struct ch36x_dev *ch36x_dev)
 {
 	u8 ctrlval;
-	u8 intval;
 
 	if (ch36x_dev->chiptype == CHIP_CH365) {
 		pci_read_config_byte(ch36x_dev->ch36x_pdev, CH365_STA_REG, &ctrlval);
@@ -986,7 +922,7 @@ static void ch36x_disable_interrupts(struct ch36x_dev *ch36x_dev)
 		ctrlval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367IntCtr));
 		outb(ctrlval & ~(CH367_INTCR_INT_POLAR_BIT | CH367_INTCR_INT_TYPE_BIT | CH367_INTCR_INT_ENABLE_BIT),
 		     ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367IntCtr));
-		intval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367status));
+		u8 intval = inb(ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367status));
 		outb(intval & ~CH367_MICSR_INTA_BIT, ch36x_dev->ioaddr + offsetof(mCH367_IO_REG, mCH367status));
 	}
 	ch36x_dev->intmode = INT_NONE;
@@ -1001,9 +937,8 @@ static int ch36x_fops_open(struct inode *inode, struct file *fp)
 
 	list_for_each_safe(pos, pos_tmp, &g_private_head) {
 		ch36x_dev = list_entry(pos, struct ch36x_dev, ch36x_dev_list);
-		if (minor == MINOR(ch36x_dev->ch36x_dev)) {
+		if (minor == MINOR(ch36x_dev->ch36x_dev))
 			break;
-		}
 	}
 	if (pos == &g_private_head) {
 		pr_err("%s Can't find minor:%d line:%d", __func__, minor, __LINE__);
@@ -1021,9 +956,8 @@ static int ch36x_fops_release(struct inode *inode, struct file *fp)
 
 	list_for_each_safe(pos, pos_tmp, &g_private_head) {
 		ch36x_dev = list_entry(pos, struct ch36x_dev, ch36x_dev_list);
-		if (minor == MINOR(ch36x_dev->ch36x_dev)) {
+		if (minor == MINOR(ch36x_dev->ch36x_dev))
 			break;
-		}
 	}
 	if (pos == &g_private_head) {
 		pr_err("%s Can't find minor:%d line:%d", __func__, minor, __LINE__);
@@ -1242,9 +1176,8 @@ static long ch36x_fops_ioctl(struct file *fp, unsigned int ch36x_cmd, unsigned l
 
 	list_for_each_safe(pos, pos_tmp, &g_private_head) {
 		ch36x_dev = list_entry(pos, struct ch36x_dev, ch36x_dev_list);
-		if (minor == MINOR(ch36x_dev->ch36x_dev)) {
+		if (minor == MINOR(ch36x_dev->ch36x_dev))
 			break;
-		}
 	}
 	if (pos == &g_private_head) {
 		pr_err("%s Can't find minor:%d line:%d", __func__, minor, __LINE__);
@@ -1267,9 +1200,8 @@ static int ch36x_fops_fasync(int fd, struct file *fp, int on)
 
 	list_for_each_safe(pos, pos_tmp, &g_private_head) {
 		ch36x_dev = list_entry(pos, struct ch36x_dev, ch36x_dev_list);
-		if (minor == MINOR(ch36x_dev->ch36x_dev)) {
+		if (minor == MINOR(ch36x_dev->ch36x_dev))
 			break;
-		}
 	}
 	if (pos == &g_private_head) {
 		pr_err("Fun:%s Can't find minor:0x%x line:%d", __FUNCTION__, minor, __LINE__);
@@ -1292,32 +1224,30 @@ static const struct file_operations ch36x_fops = {
 static void ch36x_dump_regs(struct ch36x_dev *ch36x_dev)
 {
 	u8 obyte;
-	u8 offset;
 	u8 configend;
 	u8 iostart;
 	u8 ioend;
 
-	pr_debug("---------- g_dev_count: %d ----------\n", g_dev_count);
-
-	pr_debug("\n---------- pci/pcie config space ----------\n");
+	pr_debug("---------- g_dev_count: %d ----------", g_dev_count);
+	pr_debug("\n---------- pci/pcie config space ----------");
 	if (ch36x_dev->chiptype == CHIP_CH365) {
 		configend = 0x42;
-		iostart = 0xf0;
-		ioend = 0xfc;
+		iostart = 0xF0;
+		ioend = 0xFC;
 	} else {
 		configend = 0x40;
-		iostart = 0xe8;
-		ioend = 0xfe;
+		iostart = 0xE8;
+		ioend = 0xFE;
 	}
-	for (offset = 0; offset <= configend; offset++) {
+	for (u8 offset = 0; offset <= configend; offset++) {
 		pci_read_config_byte(ch36x_dev->ch36x_pdev, offset, &obyte);
-		pr_debug("\toffset:0x%2x, val:0x%2x\n", offset, obyte);
+		pr_debug("\toffset:0x%2x, val:0x%2x", offset, obyte);
 	}
 
-	pr_debug("\n---------- pci/pcie io space ----------\n");
-	for (offset = iostart; offset <= ioend; offset++) {
+	pr_debug("\n---------- pci/pcie io space ----------");
+	for (u8 offset = iostart; offset <= ioend; offset++) {
 		obyte = inb(ch36x_dev->ioaddr + offset);
-		pr_debug("\toffset:0x%2x, val:0x%2x\n", offset, obyte);
+		pr_debug("\toffset:0x%2x, val:0x%2x", offset, obyte);
 	}
 
 	return;
@@ -1330,48 +1260,37 @@ static void ch36x_unmap_device(struct pci_dev *pdev, struct ch36x_dev *ch36x_dev
 
 static int ch36x_map_device(struct pci_dev *pdev, struct ch36x_dev *ch36x_dev)
 {
-	int ret = -ENOMEM;
-
 	ch36x_dev->iolen = pci_resource_len(pdev, 0);
 	ch36x_dev->memlen = pci_resource_len(pdev, 1);
 	/* map the memory mapped i/o registers */
 	ch36x_dev->ioaddr = pci_resource_start(pdev, 0);
 	if (!ch36x_dev->ioaddr) {
-		dev_err(&pdev->dev, "Error mapping io\n");
-		goto out;
+		dev_err(&pdev->dev, "Error mapping IO");
+		return -ENOMEM;
 	}
 	ch36x_dev->memaddr = pci_iomap(pdev, 1, ch36x_dev->memlen);
 	if (ch36x_dev->memaddr == NULL) {
-		dev_err(&pdev->dev, "Error mapping mem\n");
-		goto out;
+		dev_err(&pdev->dev, "Error mapping mem");
+		return -ENOMEM;
 	}
-	ch36x_dev->irq = pdev->irq;
-	dev_info(&pdev->dev, "ch36x map succeed.\n");
-	dev_vdbg(&pdev->dev, "***********I/O Port**********\n");
-	dev_vdbg(&pdev->dev, "phy addr: 0x%lx\n", (unsigned long)pci_resource_start(pdev, 0));
-	dev_vdbg(&pdev->dev, "io len: %ld\n", ch36x_dev->iolen);
-	dev_vdbg(&pdev->dev, "***********I/O Memory**********\n");
-	dev_vdbg(&pdev->dev, "phy addr: 0x%lx\n", (unsigned long)pci_resource_start(pdev, 1));
-	dev_vdbg(&pdev->dev, "mapped addr: 0x%lx\n", (unsigned long)ch36x_dev->memaddr);
-	dev_vdbg(&pdev->dev, "mem len: %ld\n", ch36x_dev->memlen);
-	dev_info(&pdev->dev, "irq number is: %d", ch36x_dev->irq);
-
+	// IRQ will be assigned in `ch36x_pci_probe`
+	dev_info(&pdev->dev, "ch36x map succeed.");
+	dev_vdbg(&pdev->dev, "***********I/O Port**********");
+	dev_vdbg(&pdev->dev, "phy addr: 0x%lx", (unsigned long)pci_resource_start(pdev, 0));
+	dev_vdbg(&pdev->dev, "io len: %ld", ch36x_dev->iolen);
+	dev_vdbg(&pdev->dev, "***********I/O Memory**********");
+	dev_vdbg(&pdev->dev, "phy addr: 0x%lx", (unsigned long)pci_resource_start(pdev, 1));
+	dev_vdbg(&pdev->dev, "mapped addr: 0x%lx", (unsigned long)ch36x_dev->memaddr);
+	dev_vdbg(&pdev->dev, "mem len: %ld", ch36x_dev->memlen);
 	return 0;
-
-out:
-	return ret;
 }
 
 static int ch36x_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
-	int retval = -ENOMEM;
-	struct ch36x_dev *ch36x_dev = NULL;
-	struct device *dev;
-
-	dev_info(&pdev->dev, "%s\n", __func__);
-	ch36x_dev = kzalloc(sizeof(*ch36x_dev), GFP_KERNEL);
+	dev_info(&pdev->dev, "%s", __func__);
+	struct ch36x_dev *ch36x_dev = kzalloc(sizeof(*ch36x_dev), GFP_KERNEL);
 	if (!ch36x_dev)
-		goto out;
+		return -ENOMEM;
 
 	ch36x_dev->ch36x_pdev = pdev;
 	if (pdev->device == CH365_DID)
@@ -1381,24 +1300,24 @@ static int ch36x_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent
 	else if (pdev->device == CH368_DID)
 		ch36x_dev->chiptype = CHIP_CH368;
 
-	retval = pci_enable_device(pdev);
+	int retval = pci_enable_device(pdev);
 	if (retval)
 		goto free;
 
-        retval = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI | PCI_IRQ_MSIX);
-        if (retval > 0) {
-                ch36x_dev->irq = pci_irq_vector(pdev, 0);
-                if (ch36x_dev->irq <= 0) {
-                        dev_err(&pdev->dev, "Invalid MSI IRQ %d", ch36x_dev->irq);
-                        goto free_vectors;
-                }
-        } else {
-                ch36x_dev->irq = pdev->irq; // legacy INTx
-                if (ch36x_dev->irq <= 0) {
-                        dev_err(&pdev->dev, "No usable IRQ\n");
-                        goto disable;
-                }
-        }
+	retval = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI | PCI_IRQ_MSIX);
+	if (retval > 0) {
+		ch36x_dev->irq = pci_irq_vector(pdev, 0);
+		if (ch36x_dev->irq <= 0) {
+			dev_err(&pdev->dev, "Invalid MSI IRQ %d", ch36x_dev->irq);
+			goto free_vectors;
+		}
+	} else {
+		ch36x_dev->irq = pdev->irq; // legacy INTx
+		if (ch36x_dev->irq <= 0) {
+			dev_err(&pdev->dev, "No usable IRQ\n");
+			goto disable;
+		}
+	}
 
 	pci_set_master(pdev);
 
@@ -1416,7 +1335,7 @@ static int ch36x_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent
 	sprintf(ch36x_dev->dev_file_name, "%s%c", CH36X_DRV_NAME, '0' + g_dev_count);
 	retval = request_irq(ch36x_dev->irq, ch36x_isr, IRQF_SHARED, ch36x_dev->dev_file_name, (void *)ch36x_dev);
 	if (retval) {
-		dev_err(&pdev->dev, "Could not request irq.\n");
+		dev_err(&pdev->dev, "Could not request IRQ.");
 		goto unmap;
 	}
 
@@ -1427,53 +1346,52 @@ static int ch36x_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent
 	ch36x_dev->ch36x_dev = MKDEV(ch36x_major, g_dev_count);
 	retval = cdev_add(&ch36x_dev->cdev, ch36x_dev->ch36x_dev, 1);
 	if (retval) {
-		dev_err(&pdev->dev, "Could not add cdev\n");
+		dev_err(&pdev->dev, "Could not add cdev");
 		goto remove_isr;
 	}
 
-	dev = device_create(ch36x_class, &pdev->dev, ch36x_dev->ch36x_dev, NULL, "%s", ch36x_dev->dev_file_name);
+	struct device* dev = device_create(ch36x_class, &pdev->dev, ch36x_dev->ch36x_dev, NULL, "%s", ch36x_dev->dev_file_name);
 	if (IS_ERR(dev))
-		dev_err(&pdev->dev, "Could not create device node.\n");
+		dev_err(&pdev->dev, "Could not create device node.");
 
 	list_add_tail(&(ch36x_dev->ch36x_dev_list), &g_private_head);
 	g_dev_count++;
-        dev_info(&pdev->dev, "%s finshed.", __func__);
+	dev_info(&pdev->dev, "%s finshed.", __func__);
 	return 0;
 
 remove_isr:
-        free_irq(ch36x_dev->irq, ch36x_dev);
+	free_irq(ch36x_dev->irq, ch36x_dev);
 unmap:
 	ch36x_unmap_device(pdev, ch36x_dev);
 free_regions:
 	pci_release_regions(pdev);
 free_vectors:
-        pci_free_irq_vectors(pdev);
+	pci_free_irq_vectors(pdev);
 disable:
 	pci_disable_device(pdev);
 free:
 	kfree(ch36x_dev);
-out:
 	return retval;
 }
 
 static void ch36x_pci_remove(struct pci_dev *pdev)
 {
+	dev_info(&pdev->dev, "%s", __func__);
 	struct ch36x_dev *ch36x_dev = pci_get_drvdata(pdev);
-
 	if (!ch36x_dev)
 		return;
 
-	dev_info(&pdev->dev, "%s", __func__);
 	device_destroy(ch36x_class, ch36x_dev->ch36x_dev);
 	cdev_del(&ch36x_dev->cdev);
-        free_irq(ch36x_dev->irq, ch36x_dev);
+	free_irq(ch36x_dev->irq, ch36x_dev);
 	ch36x_unmap_device(pdev, ch36x_dev);
 	pci_release_regions(pdev);
-        pci_free_irq_vectors(pdev);
-        pci_disable_device(pdev);
-        list_del(&(ch36x_dev->ch36x_dev_list));
-        g_dev_count--; // !!!
-        kfree(ch36x_dev);
+	pci_free_irq_vectors(pdev);
+	pci_disable_device(pdev);
+	list_del(&(ch36x_dev->ch36x_dev_list));
+	g_dev_count--; // !!!
+	kfree(ch36x_dev);
+	dev_info(&pdev->dev, "%s finshed.", __func__);
 }
 
 static struct pci_device_id ch36x_id_table[] = {
@@ -1497,10 +1415,10 @@ static int __init ch36x_init(void)
 	int error;
 	dev_t dev;
 
-	printk(KERN_INFO KBUILD_MODNAME ": " DRIVER_DESC "\n");
-	printk(KERN_INFO KBUILD_MODNAME ": " VERSION_DESC "\n");
+	printk(KERN_INFO KBUILD_MODNAME ": " DRIVER_DESC);
+	printk(KERN_INFO KBUILD_MODNAME ": " VERSION_DESC);
 	INIT_LIST_HEAD(&g_private_head);
-        ch36x_class = class_create("ch36x_class");
+	ch36x_class = class_create("ch36x_class");
 	if (IS_ERR(ch36x_class)) {
 		error = PTR_ERR(ch36x_class);
 		goto out;
@@ -1527,8 +1445,7 @@ out:
 
 static void __exit ch36x_exit(void)
 {
-	printk(KERN_INFO KBUILD_MODNAME ": "
-					"ch36x driver exit.\n");
+	printk(KERN_INFO KBUILD_MODNAME ": driver exit.");
 	g_dev_count = 0;
 	pci_unregister_driver(&ch36x_pci_driver);
 	unregister_chrdev_region(MKDEV(ch36x_major, 0), CH36X_MAX_NUM);

@@ -43,14 +43,11 @@ static const char *device = "/dev/ch36xpci0";
  */
 int ch36x_open(const char *devname)
 {
-	int fd;
-
-	fd = open(devname, O_RDWR);
+	int fd = open(devname, O_RDWR);
 	if (fd > 0) {
 		fcntl(fd, F_SETOWN, getpid());
 		fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | FASYNC);
 	}
-
 	return fd;
 }
 
@@ -142,16 +139,12 @@ int ch36x_read_config_byte(int fd, uint8_t offset, uint8_t *obyte)
 	} __attribute__((packed));
 
 	struct ch36x_read_config_t ch36x_read_config;
-	int ret;
-
 	ch36x_read_config.offset = offset;
 
-	ret = ioctl(fd, CH36x_READ_CONFIG_BYTE, (unsigned long)&ch36x_read_config);
-	if (ret < 0) {
-		goto exit;
-	}
-	*obyte = ch36x_read_config.obyte;
-exit:
+	int ret = ioctl(fd, CH36x_READ_CONFIG_BYTE, (unsigned long)&ch36x_read_config);
+	if (ret >= 0)
+		*obyte = ch36x_read_config.obyte;
+
 	return ret;
 }
 
@@ -171,16 +164,12 @@ int ch36x_read_config_word(int fd, uint8_t offset, uint16_t *oword)
 	} __attribute__((packed));
 
 	struct ch36x_read_config_t ch36x_read_config;
-	int ret;
-
 	ch36x_read_config.offset = offset;
 
-	ret = ioctl(fd, CH36x_READ_CONFIG_WORD, (unsigned long)&ch36x_read_config);
-	if (ret < 0) {
-		goto exit;
-	}
-	*oword = ch36x_read_config.oword;
-exit:
+	int ret = ioctl(fd, CH36x_READ_CONFIG_WORD, (unsigned long)&ch36x_read_config);
+	if (ret >= 0)
+		*oword = ch36x_read_config.oword;
+
 	return ret;
 }
 
@@ -200,16 +189,12 @@ int ch36x_read_config_dword(int fd, uint8_t offset, uint32_t *odword)
 	} __attribute__((packed));
 
 	struct ch36x_read_config_t ch36x_read_config;
-	int ret;
-
 	ch36x_read_config.offset = offset;
 
-	ret = ioctl(fd, CH36x_READ_CONFIG_DWORD, (unsigned long)&ch36x_read_config);
-	if (ret < 0) {
-		goto exit;
-	}
-	*odword = ch36x_read_config.odword;
-exit:
+	int ret = ioctl(fd, CH36x_READ_CONFIG_DWORD, (unsigned long)&ch36x_read_config);
+	if (ret >= 0)
+		*odword = ch36x_read_config.odword;
+
 	return ret;
 }
 
@@ -229,7 +214,6 @@ int ch36x_write_config_byte(int fd, uint8_t offset, uint8_t ibyte)
 	} __attribute__((packed));
 
 	struct ch36x_write_config_t ch36x_write_config;
-
 	ch36x_write_config.offset = offset;
 	ch36x_write_config.ibyte = ibyte;
 
@@ -252,7 +236,6 @@ int ch36x_write_config_word(int fd, uint8_t offset, uint16_t iword)
 	} __attribute__((packed));
 
 	struct ch36x_write_config_t ch36x_write_config;
-
 	ch36x_write_config.offset = offset;
 	ch36x_write_config.iword = iword;
 
@@ -275,7 +258,6 @@ int ch36x_write_config_dword(int fd, uint8_t offset, uint32_t idword)
 	} __attribute__((packed));
 
 	struct ch36x_write_config_t ch36x_write_config;
-
 	ch36x_write_config.offset = offset;
 	ch36x_write_config.idword = idword;
 
@@ -298,16 +280,12 @@ int ch36x_read_io_byte(int fd, uint8_t offset, uint8_t *obyte)
 	} __attribute__((packed));
 
 	struct ch36x_read_io_t ch36x_read_io;
-	int ret;
-
 	ch36x_read_io.offset = offset;
 
-	ret = ioctl(fd, CH36x_READ_IO_BYTE, (unsigned long)&ch36x_read_io);
-	if (ret < 0) {
-		goto exit;
-	}
-	*obyte = ch36x_read_io.obyte;
-exit:
+	int ret = ioctl(fd, CH36x_READ_IO_BYTE, (unsigned long)&ch36x_read_io);
+	if (ret >= 0)
+		*obyte = ch36x_read_io.obyte;
+
 	return ret;
 }
 
@@ -327,16 +305,12 @@ int ch36x_read_io_word(int fd, uint8_t offset, uint16_t *oword)
 	} __attribute__((packed));
 
 	struct ch36x_read_io_t ch36x_read_io;
-	int ret;
-
 	ch36x_read_io.offset = offset;
 
-	ret = ioctl(fd, CH36x_READ_IO_WORD, (unsigned long)&ch36x_read_io);
-	if (ret < 0) {
-		goto exit;
-	}
-	*oword = ch36x_read_io.oword;
-exit:
+	int ret = ioctl(fd, CH36x_READ_IO_WORD, (unsigned long)&ch36x_read_io);
+	if (ret >= 0)
+		*oword = ch36x_read_io.oword;
+
 	return ret;
 }
 
@@ -356,16 +330,12 @@ int ch36x_read_io_dword(int fd, uint8_t offset, uint32_t *odword)
 	} __attribute__((packed));
 
 	struct ch36x_read_io_t ch36x_read_io;
-	int ret;
-
 	ch36x_read_io.offset = offset;
 
-	ret = ioctl(fd, CH36x_READ_IO_DWORD, (unsigned long)&ch36x_read_io);
-	if (ret < 0) {
-		goto exit;
-	}
-	*odword = ch36x_read_io.odword;
-exit:
+	int ret = ioctl(fd, CH36x_READ_IO_DWORD, (unsigned long)&ch36x_read_io);
+	if (ret >= 0)
+		*odword = ch36x_read_io.odword;
+
 	return ret;
 }
 
@@ -385,7 +355,6 @@ int ch36x_write_io_byte(int fd, uint8_t offset, uint8_t ibyte)
 	} __attribute__((packed));
 
 	struct ch36x_write_io_t ch36x_write_io;
-
 	ch36x_write_io.offset = offset;
 	ch36x_write_io.ibyte = ibyte;
 
@@ -408,7 +377,6 @@ int ch36x_write_io_word(int fd, uint8_t offset, uint16_t iword)
 	} __attribute__((packed));
 
 	struct ch36x_write_io_t ch36x_write_io;
-
 	ch36x_write_io.offset = offset;
 	ch36x_write_io.iword = iword;
 
@@ -431,7 +399,6 @@ int ch36x_write_io_dword(int fd, uint8_t offset, uint32_t idword)
 	} __attribute__((packed));
 
 	struct ch36x_write_io_t ch36x_write_io;
-
 	ch36x_write_io.offset = offset;
 	ch36x_write_io.idword = idword;
 
@@ -454,16 +421,12 @@ int ch36x_read_mem_byte(int fd, uint16_t offset, uint8_t *obyte)
 	} __attribute__((packed));
 
 	struct ch36x_read_mem_t ch36x_read_mem;
-	int ret;
-
 	ch36x_read_mem.offset = offset;
 
-	ret = ioctl(fd, CH36x_READ_MEM_BYTE, (unsigned long)&ch36x_read_mem);
-	if (ret < 0) {
-		goto exit;
-	}
-	*obyte = ch36x_read_mem.obyte;
-exit:
+	int ret = ioctl(fd, CH36x_READ_MEM_BYTE, (unsigned long)&ch36x_read_mem);
+	if (ret >= 0)
+		*obyte = ch36x_read_mem.obyte;
+
 	return ret;
 }
 
@@ -483,16 +446,12 @@ int ch36x_read_mem_word(int fd, uint16_t offset, uint16_t *oword)
 	} __attribute__((packed));
 
 	struct ch36x_read_mem_t ch36x_read_mem;
-	int ret;
-
 	ch36x_read_mem.offset = offset;
 
-	ret = ioctl(fd, CH36x_READ_MEM_WORD, (unsigned long)&ch36x_read_mem);
-	if (ret < 0) {
-		goto exit;
-	}
-	*oword = ch36x_read_mem.oword;
-exit:
+	int ret = ioctl(fd, CH36x_READ_MEM_WORD, (unsigned long)&ch36x_read_mem);
+	if (ret >= 0)
+		*oword = ch36x_read_mem.oword;
+
 	return ret;
 }
 
@@ -512,16 +471,12 @@ int ch36x_read_mem_dword(int fd, uint16_t offset, uint32_t *odword)
 	} __attribute__((packed));
 
 	struct ch36x_read_mem_t ch36x_read_mem;
-	int ret;
-
 	ch36x_read_mem.offset = offset;
 
-	ret = ioctl(fd, CH36x_READ_MEM_DWORD, (unsigned long)&ch36x_read_mem);
-	if (ret < 0) {
-		goto exit;
-	}
-	*odword = ch36x_read_mem.odword;
-exit:
+	int ret = ioctl(fd, CH36x_READ_MEM_DWORD, (unsigned long)&ch36x_read_mem);
+	if (ret >= 0)
+		*odword = ch36x_read_mem.odword;
+
 	return ret;
 }
 
@@ -541,7 +496,6 @@ int ch36x_write_mem_byte(int fd, uint16_t offset, uint8_t ibyte)
 	} __attribute__((packed));
 
 	struct ch36x_write_mem_t ch36x_write_mem;
-
 	ch36x_write_mem.offset = offset;
 	ch36x_write_mem.ibyte = ibyte;
 
@@ -564,7 +518,6 @@ int ch36x_write_mem_word(int fd, uint16_t offset, uint16_t iword)
 	} __attribute__((packed));
 
 	struct ch36x_write_mem_t ch36x_write_mem;
-
 	ch36x_write_mem.offset = offset;
 	ch36x_write_mem.iword = iword;
 
@@ -587,7 +540,6 @@ int ch36x_write_mem_dword(int fd, uint16_t offset, uint32_t idword)
 	} __attribute__((packed));
 
 	struct ch36x_write_mem_t ch36x_write_mem;
-
 	ch36x_write_mem.offset = offset;
 	ch36x_write_mem.idword = idword;
 
@@ -613,29 +565,21 @@ int ch36x_read_mem_block(int fd, uint8_t type, uint16_t offset, uint8_t *obuffer
 		uint8_t data[0];
 	} __attribute__((packed));
 
-	struct ch36x_read_mem_t *ch36x_read_mem;
-	int ret;
-
 	if ((len <= 0) || (len > sizeof(mCH368_MEM_REG)))
 		return -1;
 
 	if ((type != SIZE_BYTE) && (type != SIZE_DWORD))
 		return -1;
 
-	ch36x_read_mem = malloc(sizeof(struct ch36x_read_mem_t) + len);
-
+	struct ch36x_read_mem_t *ch36x_read_mem = malloc(sizeof(struct ch36x_read_mem_t) + len);
 	ch36x_read_mem->type = type;
 	ch36x_read_mem->offset = offset;
 	ch36x_read_mem->len = len;
 
-	ret = ioctl(fd, CH36x_READ_MEM_BLOCK, (unsigned long)ch36x_read_mem);
-	if (ret < 0) {
-		goto exit;
-	}
+	int ret = ioctl(fd, CH36x_READ_MEM_BLOCK, (unsigned long)ch36x_read_mem);
+	if (ret >= 0)
+		memcpy(obuffer, ch36x_read_mem->data, len);
 
-	memcpy(obuffer, ch36x_read_mem->data, len);
-
-exit:
 	free(ch36x_read_mem);
 	return ret;
 }
@@ -659,23 +603,19 @@ int ch36x_write_mem_block(int fd, uint8_t type, uint16_t offset, uint8_t *ibuffe
 		uint8_t data[0];
 	} __attribute__((packed));
 
-	struct ch36x_write_mem_t *ch36x_write_mem;
-	int ret;
-
 	if ((len <= 0) || (len > sizeof(mCH368_MEM_REG)))
 		return -1;
 
 	if ((type != SIZE_BYTE) && (type != SIZE_DWORD))
 		return -1;
 
-	ch36x_write_mem = malloc(sizeof(struct ch36x_write_mem_t) + len);
-
+	struct ch36x_write_mem_t *ch36x_write_mem = malloc(sizeof(struct ch36x_write_mem_t) + len);
 	ch36x_write_mem->type = type;
 	ch36x_write_mem->offset = offset;
 	ch36x_write_mem->len = len;
 	memcpy(ch36x_write_mem->data, ibuffer, len);
 
-	ret = ioctl(fd, CH36x_WRITE_MEM_BLOCK, (unsigned long)ch36x_write_mem);
+	int ret = ioctl(fd, CH36x_WRITE_MEM_BLOCK, (unsigned long)ch36x_write_mem);
 
 	free(ch36x_write_mem);
 	return ret;
@@ -712,9 +652,8 @@ int ch36x_disable_isr(int fd)
  */
 void ch36x_set_int_routine(int fd, void *isr_handler)
 {
-	if (isr_handler != NULL) {
+	if (isr_handler != NULL)
 		signal(SIGIO, isr_handler);
-	}
 }
 
 /**
@@ -748,26 +687,22 @@ int ch36x_stream_spi(int fd, uint8_t *ibuffer, uint32_t ilen, uint8_t *obuffer, 
 		uint8_t obuffer[mMAX_BUFFER_LENGTH];
 	} __attribute__((packed));
 
-	struct ch36x_stream_spi_t ch36x_stream_spi;
-	int ret;
-
 	if ((ilen < 0) || (ilen > mMAX_BUFFER_LENGTH)) {
 		return -1;
 	}
 	if ((olen < 0) || (olen > mMAX_BUFFER_LENGTH)) {
 		return -1;
 	}
+
+	struct ch36x_stream_spi_t ch36x_stream_spi;
 	ch36x_stream_spi.ilen = ilen;
 	ch36x_stream_spi.olen = olen;
 	memcpy(ch36x_stream_spi.ibuffer, ibuffer, ilen);
 
-	ret = ioctl(fd, CH36x_STREAM_SPI, (unsigned long)&ch36x_stream_spi);
-	if (ret < 0)
-		goto exit;
+	int ret = ioctl(fd, CH36x_STREAM_SPI, (unsigned long)&ch36x_stream_spi);
+	if (ret >= 0)
+		memcpy(obuffer, ch36x_stream_spi.obuffer, olen);
 
-	memcpy(obuffer, ch36x_stream_spi.obuffer, olen);
-
-exit:
 	return ret;
 }
 
@@ -797,11 +732,11 @@ int ch36x_flash_erase(int fd, uint32_t addr, uint32_t ilen)
 		uint32_t addr;
 		uint32_t ilen;
 	} __attribute__((packed));
-	struct ch36x_stream_spi_t ch36x_stream_spi;
 
-	if (ilen < 0) {
+	if (ilen < 0)
 		return -1;
-	}
+
+	struct ch36x_stream_spi_t ch36x_stream_spi;
 	ch36x_stream_spi.addr = addr;
 	ch36x_stream_spi.ilen = ilen;
 
@@ -825,26 +760,17 @@ int ch36x_flash_read(int fd, uint32_t addr, uint8_t *obuffer, uint32_t olen)
 		uint8_t data[0];
 	} __attribute__((packed));
 
-	struct ch36x_stream_spi_t *ch36x_stream_spi;
-	int ret;
-
-	if (olen < 0) {
+	if (olen < 0)
 		return -1;
-	}
 
-	ch36x_stream_spi = malloc(sizeof(struct ch36x_stream_spi_t) + olen);
-
+	struct ch36x_stream_spi_t *ch36x_stream_spi = malloc(sizeof(struct ch36x_stream_spi_t) + olen);
 	ch36x_stream_spi->addr = addr;
 	ch36x_stream_spi->olen = olen;
 
-	ret = ioctl(fd, CH36x_FLASH_READ, (unsigned long)ch36x_stream_spi);
-	if (ret < 0) {
-		goto exit;
-	}
+	int ret = ioctl(fd, CH36x_FLASH_READ, (unsigned long)ch36x_stream_spi);
+	if (ret >= 0)
+		memcpy(obuffer, ch36x_stream_spi->data, olen);
 
-	memcpy(obuffer, ch36x_stream_spi->data, olen);
-
-exit:
 	free(ch36x_stream_spi);
 	return ret;
 }
@@ -866,38 +792,31 @@ int ch36x_flash_write(int fd, uint32_t addr, uint8_t *ibuffer, uint32_t ilen)
 		uint8_t data[0];
 	} __attribute__((packed));
 
-	struct ch36x_stream_spi_t *ch36x_stream_spi;
-	int ret;
-
-	if (ilen < 0) {
+	if (ilen < 0)
 		return -1;
-	}
 
-	ch36x_stream_spi = malloc(sizeof(struct ch36x_stream_spi_t) + ilen);
-
+	struct ch36x_stream_spi_t *ch36x_stream_spi = malloc(sizeof(struct ch36x_stream_spi_t) + ilen);
 	ch36x_stream_spi->addr = addr;
 	ch36x_stream_spi->ilen = ilen;
 	memcpy(ch36x_stream_spi->data, ibuffer, ilen);
 
-	ret = ioctl(fd, CH36x_FLASH_WRITE, (unsigned long)ch36x_stream_spi);
+	int ret = ioctl(fd, CH36x_FLASH_WRITE, (unsigned long)ch36x_stream_spi);
 
 	free(ch36x_stream_spi);
 	return ret;
 }
 
+
 int CH36X_SDA_GET(int fd)
 {
 	uint8_t obyte;
-
 	ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPIR), &obyte);
-
 	return obyte & 0x01;
 }
 
 void CH36X_SDA_SET(int fd)
 {
 	uint8_t obyte;
-
 	ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte);
 	ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte | CH367_GPOR_SET_SDA_BIT);
 }
@@ -923,8 +842,9 @@ void CH36X_SCL_CLR(int fd)
 	ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte & ~CH367_GPOR_SET_SCL_BIT);
 }
 
-#define I2C_DELAY1 usleep(5)
-#define I2C_DELAY2 usleep(5)
+#define I2C_DELAY1
+//#define I2C_DELAY1 usleep(5)
+//#define I2C_DELAY2 usleep(5)
 
 void I2C_Start(int fd)
 {
@@ -993,9 +913,7 @@ void I2C_SendNack(int fd)
 
 void I2C_SendByte(int fd, uint8_t ibyte)
 {
-	int bit;
-
-	for (bit = 0; bit < 8; bit++) {
+	for (int bit = 0; bit < 8; bit++) {
 		CH36X_SCL_CLR(fd);
 		if (ibyte & 0x80)
 			CH36X_SDA_SET(fd);
@@ -1011,11 +929,10 @@ void I2C_SendByte(int fd, uint8_t ibyte)
 
 uint8_t I2C_ReadByte(int fd, uint8_t ack)
 {
-	int bit;
 	uint8_t ch = 0x00;
 	uint8_t obyte;
 
-	for (bit = 0; bit < 8; bit++) {
+	for (int bit = 0; bit < 8; bit++) {
 		ch <<= 1;
 		CH36X_SCL_CLR(fd);
 		I2C_DELAY1;
@@ -1045,12 +962,6 @@ uint8_t I2C_ReadByte(int fd, uint8_t ack)
  */
 int ch36x_i2c_write(int fd, uint8_t addr, uint8_t reg, uint8_t *ibuffer, uint32_t ilen)
 {
-	int i;
-	uint8_t obyte;
-	uint8_t ibyte;
-	uint8_t bit;
-	uint8_t acksta;
-
 	/* issue i2c start */
 	I2C_Start(fd);
 
@@ -1060,8 +971,8 @@ int ch36x_i2c_write(int fd, uint8_t addr, uint8_t reg, uint8_t *ibuffer, uint32_
 	/* issue 9th clock to check ack */
 	if (I2C_WaitAck(fd)) {
 		I2C_Stop(fd);
-		goto out1;
-	}
+        return -1;
+    }
 
 	/* write i2c data unit address */
 	I2C_SendByte(fd, reg);
@@ -1069,11 +980,12 @@ int ch36x_i2c_write(int fd, uint8_t addr, uint8_t reg, uint8_t *ibuffer, uint32_
 	/* issue 9th clock to check ack */
 	if (I2C_WaitAck(fd)) {
 		I2C_Stop(fd);
-		goto out1;
-	}
+        return -2;
+    }
 
 	/* write data */
-	for (i = 0; i < ilen; i++) {
+	uint8_t ibyte;
+	for (int i = 0; i < ilen; i++) {
 		ibyte = ibuffer[i];
 
 		/* send one byte */
@@ -1082,17 +994,14 @@ int ch36x_i2c_write(int fd, uint8_t addr, uint8_t reg, uint8_t *ibuffer, uint32_
 		/* issue 9th clock to check ack */
 		if (I2C_WaitAck(fd)) {
 			I2C_Stop(fd);
-			goto out1;
-		}
+            return -100-i;
+        }
 	}
 
 	/* issue i2c stop */
 	I2C_Stop(fd);
 
-out:
 	return 0;
-out1:
-	return -1;
 }
 
 /**
@@ -1107,12 +1016,6 @@ out1:
  */
 int ch36x_i2c_read(int fd, uint8_t addr, uint8_t reg, uint8_t *obuffer, uint32_t olen)
 {
-	int i;
-	uint8_t obyte;
-	uint8_t ibyte;
-	uint8_t bit;
-	uint8_t acksta;
-
 	/* issue i2c start */
 	I2C_Start(fd);
 
@@ -1122,8 +1025,8 @@ int ch36x_i2c_read(int fd, uint8_t addr, uint8_t reg, uint8_t *obuffer, uint32_t
 	/* issue 9th clock to check ack */
 	if (I2C_WaitAck(fd)) {
 		I2C_Stop(fd);
-		goto out1;
-	}
+        return -1;
+    }
 
 	/* write i2c data unit address */
 	I2C_SendByte(fd, reg);
@@ -1131,8 +1034,8 @@ int ch36x_i2c_read(int fd, uint8_t addr, uint8_t reg, uint8_t *obuffer, uint32_t
 	/* issue 9th clock to check ack */
 	if (I2C_WaitAck(fd)) {
 		I2C_Stop(fd);
-		goto out1;
-	}
+        return -2;
+    }
 
 	/* issue i2c repeat start */
 	I2C_Start(fd);
@@ -1143,11 +1046,11 @@ int ch36x_i2c_read(int fd, uint8_t addr, uint8_t reg, uint8_t *obuffer, uint32_t
 	/* issue 9th clock to check ack */
 	if (I2C_WaitAck(fd)) {
 		I2C_Stop(fd);
-		goto out1;
-	}
+        return -3;
+    }
 
 	/* read data */
-	for (i = 0; i < olen; i++) {
+	for (int i = 0; i < olen; i++) {
 		/* the last byte has been readed, send nack to device, else send ack */
 		if (i == (olen - 1))
 			*obuffer++ = I2C_ReadByte(fd, 0);
@@ -1158,8 +1061,5 @@ int ch36x_i2c_read(int fd, uint8_t addr, uint8_t reg, uint8_t *obuffer, uint32_t
 	/* issue i2c stop */
 	I2C_Stop(fd);
 
-out:
 	return 0;
-out1:
-	return -1;
 }
