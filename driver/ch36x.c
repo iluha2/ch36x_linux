@@ -5,6 +5,9 @@
  * Web:      http://wch.cn
  * Author:   WCH <tech@wch.cn>
  *
+ * Copyright (C) 2026 INFOTECS AT
+ * Author:   Iluha Companets
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -17,6 +20,7 @@
  *      - add ioctl methods for spi transfer
  *      - fix bugs of spi transfer
  * V1.3 - fix bugs of memory block read/write
+ * V1.4 - add feature - MSI using (fork https://github.com/iluha2/ch36x_linux)
  */
 
 #define DEBUG
@@ -49,7 +53,7 @@
 
 #define DRIVER_AUTHOR "WCH"
 #define DRIVER_DESC   "PCI/PCIe driver for chip ch365/ch367/ch368, etc."
-#define VERSION_DESC  "V1.3 On 2023.07"
+#define VERSION_DESC  "V1.4 On 2026.10"
 
 #define CH36X_MAX_NUM  16
 #define CH36X_DRV_NAME "ch36xpci"
