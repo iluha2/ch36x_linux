@@ -13,6 +13,5 @@ rmmod $PACKAGE_NAME 2>/dev/null
 
 for ver in $(dkms status | awk -v name=$PACKAGE_NAME -F'[/, :]' '$1 == name {print $2}'); do
   dkms remove --all -m $PACKAGE_NAME -v $ver
+  rm -rf "/usr/src/${PACKAGE_NAME}-${ver}"
 done
-
-rm -rf "/usr/src/${PACKAGE_NAME}-${PACKAGE_VERSION}"
