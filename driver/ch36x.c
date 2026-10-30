@@ -1385,6 +1385,21 @@ static int ch36x_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent
 	if (retval)
 		goto free;
 
+        retval = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI | PCI_IRQ_MSIX);
+        if (retval > 0) {
+                ch36x_dev->irq = pci_irq_vector(pdev, 0);
+                if (ch36x_dev->irq <= 0) {
+                        dev_err(&pdev->dev, "Invalid MSI IRQ %d", ch36x_dev->irq);
+                        goto free_vectors;
+                }
+        } else {
+                ch36x_dev->irq = pdev->irq; // legacy INTx
+                if (ch36x_dev->irq <= 0) {
+                        dev_err(&pdev->dev, "No usable IRQ\n");
+                        goto disable;
+                }
+        }
+
 	pci_set_master(pdev);
 
 	retval = pci_request_regions(pdev, CH36X_DRV_NAME);
@@ -1422,17 +1437,17 @@ static int ch36x_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent
 
 	list_add_tail(&(ch36x_dev->ch36x_dev_list), &g_private_head);
 	g_dev_count++;
-
-	dev_info(&pdev->dev, "%s ch36x_pci_probe function finshed.", __func__);
-
+        dev_info(&pdev->dev, "%s finshed.", __func__);
 	return 0;
 
 remove_isr:
-	free_irq(pdev->irq, ch36x_dev);
+        free_irq(ch36x_dev->irq, ch36x_dev);
 unmap:
 	ch36x_unmap_device(pdev, ch36x_dev);
 free_regions:
 	pci_release_regions(pdev);
+free_vectors:
+        pci_free_irq_vectors(pdev);
 disable:
 	pci_disable_device(pdev);
 free:
@@ -1451,11 +1466,14 @@ static void ch36x_pci_remove(struct pci_dev *pdev)
 	dev_info(&pdev->dev, "%s", __func__);
 	device_destroy(ch36x_class, ch36x_dev->ch36x_dev);
 	cdev_del(&ch36x_dev->cdev);
-	free_irq(pdev->irq, ch36x_dev);
+        free_irq(ch36x_dev->irq, ch36x_dev);
 	ch36x_unmap_device(pdev, ch36x_dev);
 	pci_release_regions(pdev);
-	list_del(&(ch36x_dev->ch36x_dev_list));
-	kfree(ch36x_dev);
+        pci_free_irq_vectors(pdev);
+        pci_disable_device(pdev);
+        list_del(&(ch36x_dev->ch36x_dev_list));
+        g_dev_count--; // !!!
+        kfree(ch36x_dev);
 }
 
 static struct pci_device_id ch36x_id_table[] = {
@@ -1482,7 +1500,7 @@ static int __init ch36x_init(void)
 	printk(KERN_INFO KBUILD_MODNAME ": " DRIVER_DESC "\n");
 	printk(KERN_INFO KBUILD_MODNAME ": " VERSION_DESC "\n");
 	INIT_LIST_HEAD(&g_private_head);
-	ch36x_class = class_create(THIS_MODULE, "ch36x_class");
+        ch36x_class = class_create("ch36x_class");
 	if (IS_ERR(ch36x_class)) {
 		error = PTR_ERR(ch36x_class);
 		goto out;
