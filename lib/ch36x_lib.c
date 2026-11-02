@@ -847,8 +847,8 @@ void CH36X_SCL_CLR(int fd)
 }
 
 #define I2C_DELAY1
-//#define I2C_DELAY1 usleep(5)
-//#define I2C_DELAY2 usleep(5)
+#define I2C_DELAY_5US usleep(5)
+#define I2C_DELAY_10MS_N(N) { if(N) usleep(N*10*1000); }
 
 void I2C_Start(int fd)
 {
@@ -885,7 +885,8 @@ int I2C_WaitAck(int fd)
 			I2C_Stop(fd);
 			return -1;
 		}
-	}
+        I2C_DELAY_5US;
+    }
 	CH36X_SCL_CLR(fd);
 	I2C_DELAY1;
 
@@ -1005,7 +1006,10 @@ int ch36x_i2c_write(int fd, uint8_t addr, uint8_t reg, uint8_t *ibuffer, uint32_
 	/* issue i2c stop */
 	I2C_Stop(fd);
 
-	return 0;
+    /* delay after write */
+    I2C_DELAY_10MS_N(ilen);
+
+    return 0;
 }
 
 /**
@@ -1065,5 +1069,8 @@ int ch36x_i2c_read(int fd, uint8_t addr, uint8_t reg, uint8_t *obuffer, uint32_t
 	/* issue i2c stop */
 	I2C_Stop(fd);
 
-	return 0;
+    /* delay after read */
+    I2C_DELAY_10MS_N(olen);
+
+    return 0;
 }
