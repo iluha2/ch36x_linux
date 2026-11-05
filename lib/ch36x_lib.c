@@ -23,12 +23,10 @@
  * V1.4 - add feature - MSI using (fork https://github.com/iluha2/ch36x_linux)
  */
 
-#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -37,7 +35,6 @@
 #include <unistd.h>
 #include "ch36x_lib.h"
 
-static const char *device = "/dev/ch36xpci0";
 
 /**
  * ch36x_open - open ch36x device
@@ -813,146 +810,164 @@ int ch36x_flash_write(int fd, uint32_t addr, uint8_t *ibuffer, uint32_t ilen)
 
 int CH36X_SDA_GET(int fd)
 {
-	uint8_t obyte;
-	ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPIR), &obyte);
-	return obyte & 0x01;
+    uint8_t obyte = 0;
+    if(	0 == ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPIR), &obyte) )
+        obyte &= CH367_GPOR_SET_SDA_BIT;
+    return obyte;
 }
 
-void CH36X_SDA_SET(int fd)
+int CH36X_SDA_SET(int fd)
 {
 	uint8_t obyte;
-	ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte);
-	ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte | CH367_GPOR_SET_SDA_BIT);
+    return
+        ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte) ||
+        ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte | CH367_GPOR_SET_SDA_BIT);
 }
 
-void CH36X_SDA_CLR(int fd)
+int CH36X_SDA_CLR(int fd)
 {
 	uint8_t obyte;
-	ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte);
-	ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte & ~CH367_GPOR_SET_SDA_BIT);
+    return
+        ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte) ||
+        ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte & ~CH367_GPOR_SET_SDA_BIT);
 }
 
-void CH36X_SCL_SET(int fd)
+int CH36X_SCL_SET(int fd)
 {
 	uint8_t obyte;
-	ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte);
-	ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte | CH367_GPOR_SET_SCL_BIT);
+    return
+        ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte) ||
+        ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte | CH367_GPOR_SET_SCL_BIT);
 }
 
-void CH36X_SCL_CLR(int fd)
+int CH36X_SCL_CLR(int fd)
 {
 	uint8_t obyte;
-	ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte);
-	ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte & ~CH367_GPOR_SET_SCL_BIT);
+    return
+        ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte) ||
+        ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte & ~CH367_GPOR_SET_SCL_BIT);
 }
 
 #define I2C_DELAY1
 #define I2C_DELAY_5US usleep(5)
 #define I2C_DELAY_10MS_N(N) { if(N) usleep(N*10*1000); }
 
-void I2C_Start(int fd)
+int I2C_Start(int fd)
 {
-	CH36X_SDA_SET(fd);
-	CH36X_SCL_SET(fd);
-	I2C_DELAY1;
-	CH36X_SDA_CLR(fd);
-	I2C_DELAY1;
-	CH36X_SCL_CLR(fd);
+    return
+        CH36X_SDA_SET(fd) ||
+        CH36X_SCL_SET(fd) ||
+        // I2C_DELAY1;
+        CH36X_SDA_CLR(fd) ||
+        // I2C_DELAY1;
+        CH36X_SCL_CLR(fd);
 }
 
-void I2C_Stop(int fd)
+int I2C_Stop(int fd)
 {
-	CH36X_SDA_CLR(fd);
-	CH36X_SCL_CLR(fd);
-	I2C_DELAY1;
-	CH36X_SCL_SET(fd);
-	I2C_DELAY1;
-	CH36X_SDA_SET(fd);
+    return
+        CH36X_SDA_CLR(fd) ||
+        CH36X_SCL_CLR(fd) ||
+        // I2C_DELAY1;
+        CH36X_SCL_SET(fd) ||
+        // I2C_DELAY1;
+        CH36X_SDA_SET(fd);
 }
 
 int I2C_WaitAck(int fd)
 {
-	uint8_t err_times = 0;
-	uint8_t obyte;
-
-	ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPIR), &obyte);
+    // uint8_t obyte;
+    // ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPIR), &obyte);
 	I2C_DELAY1;
-	CH36X_SCL_SET(fd);
+    if( CH36X_SCL_SET(fd) )
+        return -1;
 	I2C_DELAY1;
-	while (CH36X_SDA_GET(fd)) {
-		err_times++;
-		if (err_times > 250) {
+    int err_times = 0;
+    while( CH36X_SDA_GET(fd) )
+    {
+        if( err_times++ > 500 )
+        {
 			I2C_Stop(fd);
-			return -1;
+            return -2;
 		}
         I2C_DELAY_5US;
     }
-	CH36X_SCL_CLR(fd);
+    if( CH36X_SCL_CLR(fd) )
+        return -3;
 	I2C_DELAY1;
-
 	return 0;
 }
 
-void I2C_SendAck(int fd)
+int I2C_SendAck(int fd)
 {
-	CH36X_SCL_CLR(fd);
-	CH36X_SDA_CLR(fd);
-	I2C_DELAY1;
-	CH36X_SCL_SET(fd);
-	I2C_DELAY1;
-	CH36X_SCL_CLR(fd);
-	I2C_DELAY1;
-	CH36X_SDA_SET(fd);
+    return
+        CH36X_SCL_CLR(fd) ||
+        CH36X_SDA_CLR(fd) ||
+        // I2C_DELAY1;
+        CH36X_SCL_SET(fd) ||
+        // I2C_DELAY1;
+        CH36X_SCL_CLR(fd) ||
+        // I2C_DELAY1;
+        CH36X_SDA_SET(fd);
 }
 
-void I2C_SendNack(int fd)
+int I2C_SendNack(int fd)
 {
-	CH36X_SCL_CLR(fd);
-	CH36X_SDA_SET(fd);
-	I2C_DELAY1;
-	CH36X_SCL_SET(fd);
-	I2C_DELAY1;
-	CH36X_SCL_CLR(fd);
-	I2C_DELAY1;
+    return
+        CH36X_SCL_CLR(fd) ||
+        CH36X_SDA_SET(fd) ||
+        // I2C_DELAY1;
+        CH36X_SCL_SET(fd) ||
+        // I2C_DELAY1;
+        CH36X_SCL_CLR(fd);
 }
 
-void I2C_SendByte(int fd, uint8_t ibyte)
+int I2C_SendByte(int fd, uint8_t ibyte)
 {
-	for (int bit = 0; bit < 8; bit++) {
-		CH36X_SCL_CLR(fd);
-		if (ibyte & 0x80)
-			CH36X_SDA_SET(fd);
+    for( int bit = 0; bit < 8; bit++ )
+    {
+        if( CH36X_SCL_CLR(fd) )
+            return -10-bit;
+        if( ibyte & 0x80 )
+        {
+            if( CH36X_SDA_SET(fd) )
+                return -20-bit;
+        }
 		else
-			CH36X_SDA_CLR(fd);
+        {
+            if( CH36X_SDA_CLR(fd) )
+                return -30-bit;
+        }
 		ibyte <<= 1;
 		I2C_DELAY1;
-		CH36X_SCL_SET(fd);
+        if( CH36X_SCL_SET(fd) )
+            return -40-bit;
 		I2C_DELAY1;
 	}
-	CH36X_SCL_CLR(fd);
+    return CH36X_SCL_CLR(fd);
 }
 
-uint8_t I2C_ReadByte(int fd, uint8_t ack)
+int I2C_ReadByte(int fd, uint8_t ack, uint8_t *obyte)
 {
-	uint8_t ch = 0x00;
-	uint8_t obyte;
+    *obyte = 0;
 
-	for (int bit = 0; bit < 8; bit++) {
-		ch <<= 1;
-		CH36X_SCL_CLR(fd);
+    for (int bit = 0; bit < 8; bit++)
+    {
+        *obyte <<= 1;
+        if( CH36X_SCL_CLR(fd) )
+            return -10-bit;
 		I2C_DELAY1;
-		CH36X_SCL_SET(fd);
-		I2C_DELAY1;
-		ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPIR), &obyte);
-		if (obyte & 0x01)
-			ch++;
-	}
-	if (ack)
-		I2C_SendAck(fd);
-	else
-		I2C_SendNack(fd);
+        if( CH36X_SCL_SET(fd) )
+            return -20-bit;
+        I2C_DELAY1;
+        if( CH36X_SDA_GET(fd) )
+            (*obyte)++;
+    }
 
-	return ch;
+    if (ack)
+        return I2C_SendAck(fd);
+
+    return I2C_SendNack(fd);
 }
 
 /**
@@ -968,38 +983,55 @@ uint8_t I2C_ReadByte(int fd, uint8_t ack)
 int ch36x_i2c_write(int fd, uint8_t addr, uint8_t reg, uint8_t *ibuffer, uint32_t ilen)
 {
 	/* issue i2c start */
-	I2C_Start(fd);
+    if( I2C_Start(fd) )
+        return -1;
 
 	/* write device address with write flag*/
-	I2C_SendByte(fd, (addr << 1) | 0x00);
+    if( I2C_SendByte(fd, (addr << 1) | 0x00) )
+    {
+        I2C_Stop(fd);
+        return -2;
+    }
 
 	/* issue 9th clock to check ack */
-	if (I2C_WaitAck(fd)) {
+    if( I2C_WaitAck(fd) )
+    {
 		I2C_Stop(fd);
-        return -1;
+        return -3;
     }
 
 	/* write i2c data unit address */
-	I2C_SendByte(fd, reg);
+    if( I2C_SendByte(fd, reg) )
+    {
+        I2C_Stop(fd);
+        return -4;
+    }
 
 	/* issue 9th clock to check ack */
-	if (I2C_WaitAck(fd)) {
+    if( I2C_WaitAck(fd) )
+    {
 		I2C_Stop(fd);
-        return -2;
+        return -5;
     }
 
 	/* write data */
 	uint8_t ibyte;
-	for (int i = 0; i < ilen; i++) {
+    for( int i = 0; i < ilen; i++ )
+    {
 		ibyte = ibuffer[i];
 
 		/* send one byte */
-		I2C_SendByte(fd, ibyte);
+        if( I2C_SendByte(fd, ibyte) )
+        {
+            I2C_Stop(fd);
+            return -100-i;
+        }
 
 		/* issue 9th clock to check ack */
-		if (I2C_WaitAck(fd)) {
+        if( I2C_WaitAck(fd) )
+        {
 			I2C_Stop(fd);
-            return -100-i;
+            return -200-i;
         }
 	}
 
@@ -1025,46 +1057,69 @@ int ch36x_i2c_write(int fd, uint8_t addr, uint8_t reg, uint8_t *ibuffer, uint32_
 int ch36x_i2c_read(int fd, uint8_t addr, uint8_t reg, uint8_t *obuffer, uint32_t olen)
 {
 	/* issue i2c start */
-	I2C_Start(fd);
+    if( I2C_Start(fd) )
+        return -1;
 
 	/* write device address with write flag*/
-	I2C_SendByte(fd, (addr << 1) | 0x00);
-
-	/* issue 9th clock to check ack */
-	if (I2C_WaitAck(fd)) {
-		I2C_Stop(fd);
-        return -1;
-    }
-
-	/* write i2c data unit address */
-	I2C_SendByte(fd, reg);
-
-	/* issue 9th clock to check ack */
-	if (I2C_WaitAck(fd)) {
-		I2C_Stop(fd);
+    if( I2C_SendByte(fd, (addr << 1) | 0x00) )
+    {
+        I2C_Stop(fd);
         return -2;
     }
 
-	/* issue i2c repeat start */
-	I2C_Start(fd);
-
-	/* write device address with read flag*/
-	I2C_SendByte(fd, (addr << 1) | 0x01);
-
 	/* issue 9th clock to check ack */
-	if (I2C_WaitAck(fd)) {
+    if( I2C_WaitAck(fd) )
+    {
 		I2C_Stop(fd);
         return -3;
     }
 
+	/* write i2c data unit address */
+    if( I2C_SendByte(fd, reg) )
+    {
+        I2C_Stop(fd);
+        return -4;
+    }
+
+	/* issue 9th clock to check ack */
+    if( I2C_WaitAck(fd) )
+    {
+		I2C_Stop(fd);
+        return -5;
+    }
+
+    /* issue i2c repeat start */
+    if( I2C_Start(fd) )
+    {
+        I2C_Stop(fd);
+        return -6;
+    }
+
+    /* write device address with read flag*/
+    if( I2C_SendByte(fd, (addr << 1) | 0x01) )
+    {
+        I2C_Stop(fd);
+        return -7;
+    }
+
+    /* issue 9th clock to check ack */
+    if( I2C_WaitAck(fd) )
+    {
+        I2C_Stop(fd);
+        return -8;
+    }
+
 	/* read data */
-	for (int i = 0; i < olen; i++) {
+    for( int i = 0; i < olen; i++ )
+    {
 		/* the last byte has been readed, send nack to device, else send ack */
-		if (i == (olen - 1))
-			*obuffer++ = I2C_ReadByte(fd, 0);
-		else
-			*obuffer++ = I2C_ReadByte(fd, 1);
-	}
+        uint8_t ack = (i == (olen - 1)) ? 0 : 1;
+        if( I2C_ReadByte(fd, ack, obuffer++) )
+        {
+            I2C_Stop(fd);
+            return -100-i;
+        }
+    }
 
 	/* issue i2c stop */
 	I2C_Stop(fd);
