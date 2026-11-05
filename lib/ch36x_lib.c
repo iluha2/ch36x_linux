@@ -818,70 +818,66 @@ int CH36X_SDA_GET(int fd)
 
 int CH36X_SDA_SET(int fd)
 {
-	uint8_t obyte;
-    return
-        ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte) ||
-        ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte | CH367_GPOR_SET_SDA_BIT);
+    uint8_t obyte;
+    int res = ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte);
+    if( !res ) // if success
+        res = ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte | CH367_GPOR_SET_SDA_BIT);
+    return res;
 }
 
 int CH36X_SDA_CLR(int fd)
 {
-	uint8_t obyte;
-    return
-        ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte) ||
-        ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte & ~CH367_GPOR_SET_SDA_BIT);
+    uint8_t obyte;
+    int res = ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte);
+    if( !res ) // if success
+        res = ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte & ~CH367_GPOR_SET_SDA_BIT);
+    return res;
 }
 
 int CH36X_SCL_SET(int fd)
 {
 	uint8_t obyte;
-    return
-        ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte) ||
-        ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte | CH367_GPOR_SET_SCL_BIT);
+    int res = ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte);
+    if( !res ) // if success
+        res = ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte | CH367_GPOR_SET_SCL_BIT);
+    return res;
 }
 
 int CH36X_SCL_CLR(int fd)
 {
 	uint8_t obyte;
-    return
-        ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte) ||
-        ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte & ~CH367_GPOR_SET_SCL_BIT);
+    int res = ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), &obyte);
+    if( !res ) // if success
+        res = ch36x_write_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPOR), obyte & ~CH367_GPOR_SET_SCL_BIT);
+    return res;
 }
 
-#define I2C_DELAY1
 #define I2C_DELAY_5US usleep(5)
 #define I2C_DELAY_10MS_N(N) { if(N) usleep(N*10*1000); }
 
 int I2C_Start(int fd)
 {
-    return
-        CH36X_SDA_SET(fd) ||
-        CH36X_SCL_SET(fd) ||
-        // I2C_DELAY1;
-        CH36X_SDA_CLR(fd) ||
-        // I2C_DELAY1;
-        CH36X_SCL_CLR(fd);
+    int        res = CH36X_SDA_SET(fd);
+    if( !res ) res = CH36X_SCL_SET(fd);
+    if( !res ) res = CH36X_SDA_CLR(fd);
+    if( !res ) res = CH36X_SCL_CLR(fd);
+    return res;
 }
 
 int I2C_Stop(int fd)
 {
-    return
-        CH36X_SDA_CLR(fd) ||
-        CH36X_SCL_CLR(fd) ||
-        // I2C_DELAY1;
-        CH36X_SCL_SET(fd) ||
-        // I2C_DELAY1;
-        CH36X_SDA_SET(fd);
+    int        res = CH36X_SDA_CLR(fd);
+    if( !res ) res = CH36X_SCL_CLR(fd);
+    if( !res ) res = CH36X_SCL_SET(fd);
+    if( !res ) res = CH36X_SDA_SET(fd);
+    return res;
 }
 
 int I2C_WaitAck(int fd)
 {
-    // uint8_t obyte;
-    // ch36x_read_io_byte(fd, offsetof(mCH367_IO_REG, mCH367GPIR), &obyte);
-	I2C_DELAY1;
     if( CH36X_SCL_SET(fd) )
         return -1;
-	I2C_DELAY1;
+
     int err_times = 0;
     while( CH36X_SDA_GET(fd) )
     {
@@ -892,34 +888,28 @@ int I2C_WaitAck(int fd)
 		}
         I2C_DELAY_5US;
     }
-    if( CH36X_SCL_CLR(fd) )
-        return -3;
-	I2C_DELAY1;
-	return 0;
+
+    return
+        CH36X_SCL_CLR(fd) ? -3 : 0;
 }
 
 int I2C_SendAck(int fd)
 {
-    return
-        CH36X_SCL_CLR(fd) ||
-        CH36X_SDA_CLR(fd) ||
-        // I2C_DELAY1;
-        CH36X_SCL_SET(fd) ||
-        // I2C_DELAY1;
-        CH36X_SCL_CLR(fd) ||
-        // I2C_DELAY1;
-        CH36X_SDA_SET(fd);
+    int        res = CH36X_SCL_CLR(fd);
+    if( !res ) res = CH36X_SDA_CLR(fd);
+    if( !res ) res = CH36X_SCL_SET(fd);
+    if( !res ) res = CH36X_SCL_CLR(fd);
+    if( !res ) res = CH36X_SDA_SET(fd);
+    return res;
 }
 
 int I2C_SendNack(int fd)
 {
-    return
-        CH36X_SCL_CLR(fd) ||
-        CH36X_SDA_SET(fd) ||
-        // I2C_DELAY1;
-        CH36X_SCL_SET(fd) ||
-        // I2C_DELAY1;
-        CH36X_SCL_CLR(fd);
+    int        res = CH36X_SCL_CLR(fd);
+    if( !res ) res = CH36X_SDA_SET(fd);
+    if( !res ) res = CH36X_SCL_SET(fd);
+    if( !res ) res = CH36X_SCL_CLR(fd);
+    return res;
 }
 
 int I2C_SendByte(int fd, uint8_t ibyte)
@@ -939,35 +929,28 @@ int I2C_SendByte(int fd, uint8_t ibyte)
                 return -30-bit;
         }
 		ibyte <<= 1;
-		I2C_DELAY1;
         if( CH36X_SCL_SET(fd) )
             return -40-bit;
-		I2C_DELAY1;
 	}
-    return CH36X_SCL_CLR(fd);
+    return
+        CH36X_SCL_CLR(fd);
 }
 
 int I2C_ReadByte(int fd, uint8_t ack, uint8_t *obyte)
 {
     *obyte = 0;
-
     for (int bit = 0; bit < 8; bit++)
     {
         *obyte <<= 1;
         if( CH36X_SCL_CLR(fd) )
             return -10-bit;
-		I2C_DELAY1;
         if( CH36X_SCL_SET(fd) )
             return -20-bit;
-        I2C_DELAY1;
         if( CH36X_SDA_GET(fd) )
             (*obyte)++;
     }
-
-    if (ack)
-        return I2C_SendAck(fd);
-
-    return I2C_SendNack(fd);
+    return
+        ack ? I2C_SendAck(fd) : I2C_SendNack(fd);
 }
 
 /**
