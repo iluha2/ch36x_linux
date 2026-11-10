@@ -852,8 +852,8 @@ int CH36X_SCL_CLR(int fd)
     return res;
 }
 
-#define I2C_DELAY_5US usleep(5)
-#define I2C_DELAY_10MS_N(N) { if(N) usleep(N*10*1000); }
+#define I2C_DELAY_5US_N(N)  { if (N) usleep(N*5); }
+#define I2C_DELAY_10MS_N(N) { if (N) usleep(N*10*1000); }
 
 int I2C_Start(int fd)
 {
@@ -878,15 +878,15 @@ int I2C_WaitAck(int fd)
     if( CH36X_SCL_SET(fd) )
         return -1;
 
-    int err_times = 0;
+    int cnt = 0;
     while( CH36X_SDA_GET(fd) )
     {
-        if( err_times++ > 500 )
+        if( cnt++ > 500 )
         {
 			I2C_Stop(fd);
             return -2;
 		}
-        I2C_DELAY_5US;
+        I2C_DELAY_5US_N(cnt);
     }
 
     return
